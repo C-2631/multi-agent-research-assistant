@@ -7,7 +7,7 @@ import sqlite3
 import os
 from typing import Optional
 
-DATABASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "research_assistant.db")
+DATABASE_PATH = os.getenv("DATABASE_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "research_assistant.db"))
 
 
 def _get_connection() -> sqlite3.Connection:
