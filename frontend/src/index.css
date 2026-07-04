@@ -1,0 +1,351 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root, .dark-theme {
+  /* DARK THEME: Deep Space Neon */
+  --bg-primary: #0a0514;
+  --bg-secondary: #120a22;
+  --bg-card: rgba(20, 10, 35, 0.5); 
+  --bg-card-hover: rgba(30, 15, 50, 0.7);
+  --border-color: rgba(0, 255, 255, 0.2);
+  --border-glow: rgba(0, 255, 255, 0.5);
+  
+  --color-primary: #e0f2fe; /* Text Format 1 (Primary) */
+  --color-secondary: #7dd3fc; /* Text Format 2 (Secondary) */
+  --color-text-main: #f8fafc; /* Text Format 3 (Body) */
+  --color-text-muted: #94a3b8;
+  
+  --color-accent: #00ffff;
+  --color-accent-glow: rgba(0, 255, 255, 0.5);
+  --color-warning: #f0abfc;
+  
+  --shadow-subtle: 0 4px 20px rgba(0, 255, 255, 0.1);
+  --shadow-glow: 0 0 20px var(--color-accent-glow), inset 0 0 10px var(--color-accent-glow);
+  --shadow-neumorphic: 6px 6px 12px rgba(0,0,0,0.8), -6px -6px 12px rgba(0, 255, 255, 0.05);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
+  color-scheme: dark;
+}
+
+.light-theme {
+  /* LIGHT THEME: Bright Cyber Medical */
+  --bg-primary: #f0fdfa;
+  --bg-secondary: #ccfbf1;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --border-color: rgba(13, 148, 136, 0.4);
+  --border-glow: rgba(13, 148, 136, 0.7);
+  
+  --color-primary: #042f2e; /* Text Format 1 */
+  --color-secondary: #0f766e; /* Text Format 2 */
+  --color-text-main: #134e4a; /* Text Format 3 */
+  --color-text-muted: #334155;
+  
+  --color-accent: #0d9488;
+  --color-accent-glow: rgba(13, 148, 136, 0.5);
+  --color-warning: #be185d;
+  
+  --shadow-subtle: 0 4px 20px rgba(13, 148, 136, 0.2);
+  --shadow-glow: 0 0 20px var(--color-accent-glow), inset 0 0 10px var(--color-accent-glow);
+  --shadow-neumorphic: 6px 6px 12px rgba(13, 148, 136, 0.25), -6px -6px 12px rgba(255,255,255,0.9);
+  
+  color-scheme: light;
+}
+
+.system-theme {
+  /* SYSTEM THEME: Hacker Terminal (High Contrast Green/Black) */
+  --bg-primary: #000000;
+  --bg-secondary: #051005;
+  --bg-card: rgba(5, 20, 5, 0.6);
+  --bg-card-hover: rgba(10, 30, 10, 0.8);
+  --border-color: rgba(0, 255, 0, 0.3);
+  --border-glow: rgba(0, 255, 0, 0.6);
+  
+  --color-primary: #bbf7d0; /* Text Format 1 */
+  --color-secondary: #4ade80; /* Text Format 2 */
+  --color-text-main: #22c55e; /* Text Format 3 */
+  --color-text-muted: #166534;
+  
+  --color-accent: #39ff14; /* Neon Green */
+  --color-accent-glow: rgba(57, 255, 20, 0.6);
+  --color-warning: #ff003c; /* Laser Red */
+  
+  --shadow-subtle: 0 4px 20px rgba(57, 255, 20, 0.1);
+  --shadow-glow: 0 0 20px var(--color-accent-glow), inset 0 0 10px var(--color-accent-glow);
+  --shadow-neumorphic: 6px 6px 12px rgba(0,0,0,0.9), -6px -6px 12px rgba(57, 255, 20, 0.1);
+  
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, .glass-panel, .layout-wrapper, .top-navbar, .neo-button, .neo-select, input, select {
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, color 0.3s ease;
+}
+
+/* Custom Sci-Fi Cursor */
+body {
+  background-color: var(--bg-primary);
+  color: var(--color-text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2300ffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>') 12 12, auto;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Glassmorphism & Sci-Fi Glows */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-subtle);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel:hover {
+  box-shadow: var(--shadow-glow);
+  border-color: var(--color-accent);
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-accent-glow) 0%, rgba(255,255,255,0) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.block-morphism {
+  box-shadow: 
+    var(--shadow-neumorphic),
+    inset 1px 1px 2px rgba(255,255,255,0.05);
+}
+
+.neo-button {
+  background: var(--bg-card);
+  color: var(--color-text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-neumorphic);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+}
+
+.neo-button:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15), var(--shadow-neumorphic);
+}
+
+.neo-button.active {
+  background: var(--bg-secondary);
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.05);
+  color: var(--color-accent);
+}
+
+.neo-select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1), inset -2px -2px 5px rgba(255,255,255,0.02);
+  transition: all 0.3s;
+}
+
+.neo-select:focus {
+  border-color: var(--color-accent);
+}
+
+/* Subtle Background Glows */
+.bg-glow-spot {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 60%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.text-gradient {
+  background: linear-gradient(180deg, var(--color-text-main) 0%, var(--color-text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animations */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.pulse-active {
+  animation: pulseSubtle 2.5s infinite ease-in-out;
+}
+
+@keyframes flowDash {
+  to { stroke-dashoffset: -40; }
+}
+
+.flow-line {
+  stroke-dasharray: 8, 8;
+  animation: flowDash 1s linear infinite;
+}
+
+/* Sci-Fi Scanner Effect for Live Console */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+.scanner-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent), 0 0 20px var(--color-accent);
+  opacity: 0.5;
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Base Layout Classes with Sci-Fi Grid Background */
+.layout-wrapper {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  overflow-x: hidden;
+  background: var(--bg-primary);
+  background-image: 
+    linear-gradient(var(--border-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
+  perspective: 1000px;
+}
+
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-top: 65px;
+  padding: 2.5rem 3rem;
+  min-height: calc(100vh - 65px);
+  position: relative;
+  z-index: 2;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  text-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  color: var(--color-text-main);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  color: var(--color-text-main);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+  border-bottom: 2px solid var(--color-accent);
+  border-left: none;
+}

@@ -1,0 +1,23 @@
+# Ignore local database file
+research_assistant.db
+research_assistant.db-journal
+
+# Ignore virtual environments and environments
+venv/
+.venv/
+env/
+.env
+
+# Ignore python caches and compiled files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore local logs
+*.log
