@@ -89,7 +89,7 @@ Include a text-based flow diagram:
 
 FORMAT: Professional Markdown with LaTeX math, tables, code blocks, and hyperlinks.`,
 
-  Editor: (query, context) => `You are the EDITOR-IN-CHIEF Agent. Your job is to audit, polish, and finalize the research manuscript.
+  Editor: (query, context, citationFormat = 'IEEE') => `You are the EDITOR-IN-CHIEF Agent. Your job is to audit, polish, and finalize the research manuscript.
 
 TASK: Review and finalize the manuscript on "${query.replace(/_/g, ' ')}" into a publication-ready document.
 
@@ -100,14 +100,14 @@ YOUR EDITING CHECKLIST:
 1. **Fact Verification** — Verify all claims have supporting references. Flag any unsupported statements.
 2. **Mathematical Accuracy** — Ensure all LaTeX equations are properly formatted and mathematically correct.
 3. **Table Formatting** — Verify all Markdown tables render correctly with proper alignment.
-4. **Reference Integrity** — Ensure all reference links are properly formatted: [Title](URL)
+4. **Reference Integrity & Style** — Ensure all references are strictly formatted using the **${citationFormat}** academic citation standard (e.g. numerical bracketed [1] style for IEEE, or author-date style for APA/MLA). Each reference must include valid markdown links in the style: [Citation Detail / Title](URL) conforming to the ${citationFormat} style.
 5. **Flow Diagrams** — Verify pipeline/flow diagrams are clear and accurate.
 6. **Grammar & Style** — Fix any grammatical errors, improve clarity and flow.
 7. **Completeness** — Ensure Abstract, Introduction, Methodology, Findings, Discussion, Conclusion, and References are all present.
 
 OUTPUT: The complete, polished, final manuscript with all corrections applied. 
 Add a note at the top: "> ✅ **Peer Review Complete** — All mathematical formulas, citations, tables, and diagrams verified."
-Include the full reference list at the bottom with real URLs.`
+Include the full reference list at the bottom styled strictly in **${citationFormat}** format with real URLs.`
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -222,12 +222,14 @@ We present a comprehensive analysis of ${title} synthesized through our multi-ag
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN EXPORT — streams AI-generated content with Google Search grounding
 // ─────────────────────────────────────────────────────────────────────────────
-export async function streamAgentThought(agentName, promptKey, previousContext = '', apiKey = '') {
+export async function streamAgentThought(agentName, promptKey, previousContext = '', apiKey = '', citationFormat = 'IEEE') {
   // Construct the prompt using the enhanced templates defined locally
   const promptBuilder = AGENT_PROMPTS[agentName];
   let promptText = "";
   if (agentName === 'Planner') {
     promptText = promptBuilder ? promptBuilder(promptKey) : `Analyze and plan research for: ${promptKey}`;
+  } else if (agentName === 'Editor') {
+    promptText = promptBuilder ? promptBuilder(promptKey, previousContext, citationFormat) : `Perform thorough analysis on ${promptKey} as agent ${agentName}`;
   } else {
     promptText = promptBuilder ? promptBuilder(promptKey, previousContext) : `Perform thorough analysis on ${promptKey} as agent ${agentName}`;
   }
@@ -245,7 +247,8 @@ export async function streamAgentThought(agentName, promptKey, previousContext =
         promptKey,
         previousContext,
         apiKey, // User-entered key if any, otherwise backend uses .env
-        promptText
+        promptText,
+        citationFormat
       })
     });
 

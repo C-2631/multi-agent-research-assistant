@@ -8,16 +8,33 @@ import AuthPage from './components/AuthPage';
 import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/useAuthStore';
 import useSimulationStore from './store/useSimulationStore';
+import SharedPaperViewer from './components/SharedPaperViewer';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("sandbox");
   const [isLoading, setIsLoading] = useState(true);
+  const [sharedPaperUuid, setSharedPaperUuid] = useState(null);
   const { theme, setTheme, initTheme } = useThemeStore();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { syncHistory } = useSimulationStore();
 
   useEffect(() => {
     initTheme();
+    const checkRouting = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path.startsWith('/paper/')) {
+        const uuid = path.split('/')[2];
+        if (uuid) setSharedPaperUuid(uuid);
+      } else if (hash.startsWith('#/paper/')) {
+        const uuid = hash.split('/')[2];
+        const cleanUuid = uuid ? uuid.split('?')[0] : null;
+        if (cleanUuid) setSharedPaperUuid(cleanUuid);
+      }
+    };
+    checkRouting();
+    window.addEventListener('hashchange', checkRouting);
+    return () => window.removeEventListener('hashchange', checkRouting);
   }, [initTheme]);
 
   useEffect(() => {
@@ -25,6 +42,10 @@ export default function App() {
       syncHistory();
     }
   }, [isAuthenticated, syncHistory]);
+
+  if (sharedPaperUuid) {
+    return <SharedPaperViewer uuid={sharedPaperUuid} />;
+  }
 
   // Flow: LoadingScreen → Auth (if not logged in) → Main App
   return (
@@ -54,10 +75,34 @@ export default function App() {
 
               {/* Top Horizontal Navbar */}
               <header className="top-navbar">
-                <div className="navbar-left">
+                <div className="navbar-left" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div className="sidebar-logo" style={{ marginBottom: 0 }}>
                     <Layers size={24} style={{ color: 'var(--color-accent)' }} />
                     <span>Agentic Lab</span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: 'rgba(34, 197, 94, 0.08)',
+                    border: '1px solid rgba(34, 197, 94, 0.25)',
+                    borderRadius: '20px',
+                    padding: '0.25rem 0.6rem',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.04em',
+                    color: '#4ade80',
+                    fontFamily: 'var(--font-mono)'
+                  }}>
+                    <span className="pulse-active" style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: '#22c55e',
+                      boxShadow: '0 0 6px #22c55e',
+                      display: 'inline-block'
+                    }}></span>
+                    SYS SEC: SOC-2 ENCLAVE ACTIVE
                   </div>
                 </div>
 

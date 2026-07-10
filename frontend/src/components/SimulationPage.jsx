@@ -142,12 +142,12 @@ export default function SimulationPage({ onBack }) {
       </div>
 
       {/* Grid Layout for Full Page Simulation */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="responsive-sandbox-grid-top">
         <AgentNetwork />
         <TaskChecklist />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="responsive-sandbox-grid-bottom">
         <LiveConsole />
         <FinalOutput />
       </div>

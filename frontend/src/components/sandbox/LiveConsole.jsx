@@ -14,7 +14,7 @@ const getAgentColor = (name) => {
 };
 
 export default function LiveConsole() {
-  const { logs } = useSimulationStore();
+  const { logs, isSimulating } = useSimulationStore();
   const consoleBodyRef = useRef(null);
   const isAtBottomRef = useRef(true);
 
@@ -62,33 +62,38 @@ export default function LiveConsole() {
         }}
       >
         <div className="scanner-line"></div>
+        <div className="terminal-crt-overlay"></div>
         <AnimatePresence>
           {logs.length === 0 ? (
             <motion.span 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
-              style={{ color: 'var(--color-text-muted)' }}
+              style={{ color: 'var(--color-text-muted)', zIndex: 2 }}
             >
               System initialized. Waiting for execution...
             </motion.span>
           ) : (
-            logs.map((log) => (
-              <motion.div 
-                key={log.id} 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                style={{ borderLeft: `3px solid ${getAgentColor(log.agent)}`, paddingLeft: '1rem' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                  <span style={{ color: getAgentColor(log.agent), fontWeight: 700, letterSpacing: '0.05em' }}>{log.agent}</span>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>[{log.status}]</span>
-                </div>
-                <pre style={{ color: 'var(--color-text-main)', whiteSpace: 'pre-wrap', background: 'transparent', marginTop: '0.25rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
-                  {log.log}
-                </pre>
-              </motion.div>
-            ))
+            logs.map((log, index) => {
+              const isLastLog = index === logs.length - 1;
+              return (
+                <motion.div 
+                  key={log.id} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  style={{ borderLeft: `3px solid ${getAgentColor(log.agent)}`, paddingLeft: '1rem', zIndex: 2 }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                    <span style={{ color: getAgentColor(log.agent), fontWeight: 700, letterSpacing: '0.05em' }}>{log.agent}</span>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>[{log.status}]</span>
+                  </div>
+                  <pre style={{ color: 'var(--color-text-main)', whiteSpace: 'pre-wrap', background: 'transparent', marginTop: '0.25rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                    {log.log}
+                    {isLastLog && isSimulating && <span className="blinking-cursor">▋</span>}
+                  </pre>
+                </motion.div>
+              );
+            })
           )}
         </AnimatePresence>
       </div>

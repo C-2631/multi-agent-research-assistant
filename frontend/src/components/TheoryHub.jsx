@@ -51,22 +51,22 @@ export default function TheoryHub() {
       title: "Authentication",
       icon: "🔐",
       color: "#f59e0b",
-      description: "Before any agents are invoked, the system verifies the user's identity via Firebase Authentication. This ensures that only authorized users can consume API resources (Gemini API calls, Google Search quota). The authentication layer also associates each research session with the user's account so that past reports can be retrieved later from the dashboard.",
-      detail: "Backend validates Firebase ID tokens on every request to the /research endpoint."
+      description: "Before any agents are invoked, the system verifies the user's identity via JWT authentication and Google OAuth 2.0 Single Sign-On (SSO). This ensures that only authorized users can consume API resources. The authentication layer generates a secure session JWT token which is passed to the backend, associating each research session with the user's account in our dual-engine PostgreSQL/SQLite database.",
+      detail: "Backend validates Google OAuth tokens and verifies local JWT keys on all routes."
     },
     {
       title: "Planner Agent",
       icon: "🧠",
       color: "#8b5cf6",
-      description: "The Planner Agent is the first AI agent in the pipeline. It receives the raw user query and decomposes it into a structured research plan. This plan includes a list of sub-topics to investigate, the order in which they should be researched, and any specific angles or perspectives to cover. The Planner essentially acts as the 'project manager' — it ensures the research is comprehensive and well-organized before any searching begins.",
-      detail: "Uses Gemini 2.0 Flash to generate a structured JSON research plan with sub-queries."
+      description: "The Planner Agent decomposes the raw query into a structured research plan. If Human-In-The-Loop (HITL) mode is enabled, the pipeline pauses after this step. A review modal displays the plan, allowing the human operator to refine, edit, or steer the direction of the research before handing it off to subsequent agents, saving token usage and guaranteeing alignment.",
+      detail: "Generates structured JSON research plans with interactive Human-in-the-Loop (HITL) checkpoints."
     },
     {
       title: "Researcher Agent",
       icon: "🔍",
       color: "#10b981",
-      description: "The Researcher Agent is the core data-gathering component. For each sub-topic identified by the Planner, the Researcher invokes Google Search Grounding through the Gemini API. Instead of relying on the model's static training data, it performs live Google searches to retrieve the most current information from the internet. Each search result is processed, and the agent extracts key facts, statistics, quotes, and source URLs. This is what makes the system's output accurate and up-to-date — it's grounded in real-time web data, not stale training knowledge.",
-      detail: "Powered by Gemini API with google_search_retrieval tool for real-time web grounding."
+      description: "The Researcher Agent gathers data for each sub-topic using Google Search Grounding. Additionally, if the user uploaded documents (PDFs or TXT files), the system uses the Semantic RAG Vector DB engine. The documents are chunked and embedded via Google's text-embedding-004 model, and the Researcher performs cosine similarity lookups to inject relevant reference context.",
+      detail: "Powered by Gemini search grounding and cosine similarity semantic vector lookups."
     },
     {
       title: "Writer Agent",
@@ -86,8 +86,8 @@ export default function TheoryHub() {
       title: "Final Report",
       icon: "📄",
       color: "#06b6d4",
-      description: "The polished, fully cited research report is delivered back to the user's dashboard. It includes structured sections with headings, inline citations linked to real web sources, and a comprehensive references list at the bottom. The report is rendered in rich Markdown format and can be saved, downloaded, or revisited at any time from the user's report history. Each report represents the combined work of four specialized AI agents collaborating in sequence.",
-      detail: "Stored in Firestore and rendered on the dashboard with full Markdown support."
+      description: "The polished research report is delivered. It features peer-review comments left by guests, verified citation status badges (asynchronous link check), and a double-column IEEE format export option ( ReportLab compile or browser CSS grid column fallback). Sharing buttons allow generating public uuid/Base64 offline links and LinkedIn intents.",
+      detail: "Supports PDF ReportLab/CSS columns, peer comments, public sharing, and link verification."
     }
   ];
 
@@ -163,7 +163,7 @@ export default function TheoryHub() {
       <AnimatePresence mode="wait">
         {/* Tab Content: ReAct Pattern */}
         {activeTab === "react" && (
-          <motion.div key="react" variants={variants} initial="hidden" animate="visible" exit="exit" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <motion.div key="react" variants={variants} initial="hidden" animate="visible" exit="exit" className="responsive-grid-2col">
             
             <div className="glass-panel block-morphism" style={{ padding: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-main)' }}>The ReAct Framework</h3>
@@ -256,7 +256,7 @@ export default function TheoryHub() {
 
         {/* Tab Content: Memory Systems */}
         {activeTab === "memory" && (
-          <motion.div key="memory" variants={variants} initial="hidden" animate="visible" exit="exit" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <motion.div key="memory" variants={variants} initial="hidden" animate="visible" exit="exit" className="responsive-grid-2col">
             
             <div className="glass-panel block-morphism" style={{ padding: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-main)' }}>
@@ -277,7 +277,7 @@ export default function TheoryHub() {
                 <motion.div whileHover={{ scale: 1.02 }} style={{ padding: '1.5rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>Long-Term Memory</h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-                    Stored persistently in databases. Typically uses vector embeddings of past research, code bases, or documents. Retrieved dynamically using similarity search when the agent queries.
+                    Stored persistently in PostgreSQL (production on AWS RDS or Google Cloud SQL) or SQLite (local development). Uploaded research files are dynamically chunked (600 characters) and embedded using Gemini's text-embedding-004 model. Relevant context is retrieved via cosine similarity matching on each agent step.
                   </p>
                 </motion.div>
               </div>
@@ -336,7 +336,7 @@ export default function TheoryHub() {
 
         {/* Tab Content: Architectures */}
         {activeTab === "architectures" && (
-          <motion.div key="architectures" variants={variants} initial="hidden" animate="visible" exit="exit" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <motion.div key="architectures" variants={variants} initial="hidden" animate="visible" exit="exit" className="responsive-grid-2col">
             
             <div className="glass-panel block-morphism" style={{ padding: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1rem', color: '#fff' }}>Orchestration Topologies</h3>
@@ -565,7 +565,7 @@ export default function TheoryHub() {
             </div>
 
             {/* How it works - technical detail */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+            <div className="responsive-grid-2col" style={{ marginBottom: '2rem' }}>
               <div className="glass-panel block-morphism" style={{ padding: '2rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--color-text-main)' }}>How It Works Technically</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -654,7 +654,7 @@ export default function TheoryHub() {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--color-text-main)', textAlign: 'center' }}>
                 Visual Comparison: Without vs. With Google Search Grounding
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              <div className="responsive-grid-2col">
                 
                 {/* Without Grounding */}
                 <motion.div

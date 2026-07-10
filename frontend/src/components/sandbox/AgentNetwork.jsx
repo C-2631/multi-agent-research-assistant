@@ -89,9 +89,39 @@ export default function AgentNetwork() {
                       ? `0 10px 30px ${color}55, inset 0 2px 10px rgba(255,255,255,0.2)` 
                       : '4px 4px 10px rgba(0,0,0,0.5), -4px -4px 10px rgba(255,255,255,0.02)',
                     backdropFilter: 'blur(10px)',
-                    textShadow: isActive ? `0 0 10px ${color}` : 'none'
+                    textShadow: isActive ? `0 0 10px ${color}` : 'none',
+                    position: 'relative'
                   }}
                 >
+                  {/* Glowing concentric pulse rings for enterprise branding */}
+                  {isActive && (
+                    <>
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          top: -6, left: -6, right: -6, bottom: -6,
+                          borderRadius: '20px',
+                          border: `2px solid ${color}`,
+                          pointerEvents: 'none',
+                          zIndex: -1
+                        }}
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.8, 0.4] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                      />
+                      <motion.div
+                        style={{
+                          position: 'absolute',
+                          top: -12, left: -12, right: -12, bottom: -12,
+                          borderRadius: '24px',
+                          border: `1.5px dashed ${color}88`,
+                          pointerEvents: 'none',
+                          zIndex: -2
+                        }}
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.6, 0.2] }}
+                        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                      />
+                    </>
+                  )}
                   {ag.name[0]}
                 </motion.div>
                 <div>

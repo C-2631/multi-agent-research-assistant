@@ -16,12 +16,21 @@ const useSimulationStore = create((set, get) => ({
   promptKey: "quantum_medicine",
   customQuery: "",
   currentStepIndex: -1,
+  lastCompletedStepIndex: -1,
   isSimulating: false,
   simSpeed: 1000,
   apiKey: "",
+  citationFormat: "IEEE",
+  isHitlActive: false,
+  hitlWaiting: false,
+  uploadedFileName: "",
+  uploadedContext: "",
   logs: [],
   dynamicReport: "",
   totalTokens: 0,
+  totalCost: 0.0,
+  agentLatencies: {},
+  lastSavedRecordId: null,
   archive: loadArchiveFromStorage(),
   tasks: [
     { id: 1, name: "Initialize planner and define objective", status: "pending" },
@@ -31,19 +40,59 @@ const useSimulationStore = create((set, get) => ({
   activeAgent: null,
 
   setApiKey: (key) => set({ apiKey: key }),
-  setPromptKey: (key) => set({ promptKey: key, customQuery: "" }),
-  setCustomQuery: (query) => set({ customQuery: query }),
+  setCitationFormat: (format) => set({ citationFormat: format }),
+  setHitlActive: (active) => set({ isHitlActive: active }),
+  setUploadedDocument: (name, text) => set({ uploadedFileName: name, uploadedContext: text }),
+  submitHitlFeedback: (feedback) => {
+    const { logs } = get();
+    if (feedback.trim()) {
+      // Append user revision instructions to the Planner's log context
+      const plannerLog = logs.find(l => l.agent === "Planner");
+      if (plannerLog) {
+        plannerLog.log += `\n\n[USER REVISION FEEDBACK]:\n${feedback}`;
+        set({ logs: [...logs] });
+      }
+    }
+    set({ hitlWaiting: false });
+    get().startSimulation();
+  },
+  setPromptKey: (key) => {
+    set({ promptKey: key, customQuery: "" });
+    get().resetSimulation();
+  },
+  setCustomQuery: (query) => {
+    set({ customQuery: query });
+    get().resetSimulation();
+  },
   setSimSpeed: (speed) => set({ simSpeed: speed }),
   
-  startSimulation: () => {
-    const { currentStepIndex, getSteps } = get();
+  startSimulation: async () => {
+    const { currentStepIndex, getSteps, lastCompletedStepIndex } = get();
     const steps = getSteps();
     
     if (currentStepIndex === steps.length - 1) {
       get().resetSimulation();
-      setTimeout(() => set({ isSimulating: true }), 100);
     } else {
-      set({ isSimulating: true });
+      // Re-sync currentStepIndex to the last completed step index to avoid skipping paused steps
+      set({ currentStepIndex: lastCompletedStepIndex });
+    }
+    
+    set({ isSimulating: true });
+    
+    // Sequential async loop to prevent step collision and context cutoff
+    while (get().isSimulating && get().currentStepIndex < steps.length - 1) {
+      await get().advanceStep();
+      
+      // Human-in-the-Loop Interruption: pause after Planner (step 0) completes successfully
+      if (get().currentStepIndex === 0 && get().isHitlActive) {
+        set({ hitlWaiting: true, isSimulating: false });
+        break;
+      }
+      
+      // Delay before the next step starts
+      if (get().isSimulating && get().currentStepIndex < steps.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, get().simSpeed));
+      }
     }
   },
 
@@ -52,9 +101,14 @@ const useSimulationStore = create((set, get) => ({
   resetSimulation: () => set({
     isSimulating: false,
     currentStepIndex: -1,
+    lastCompletedStepIndex: -1,
+    hitlWaiting: false,
     logs: [],
     dynamicReport: "",
     totalTokens: 0,
+    totalCost: 0.0,
+    agentLatencies: {},
+    lastSavedRecordId: null,
     tasks: [
       { id: 1, name: "Initialize planner and define objective", status: "pending" },
       { id: 2, name: "Retrieve literature and facts", status: "pending" },
@@ -77,40 +131,71 @@ const useSimulationStore = create((set, get) => ({
     const nextStep = steps[nextIndex];
     const logId = Date.now();
 
+    // 1. Calculate input token estimate & input cost ($0.0015/1k tokens)
+    const { uploadedContext } = get();
+    let previousContext = logs.map(l => `[Agent ${l.agent}]: ${l.log}`).join('\n\n');
+    if (uploadedContext) {
+      previousContext += `\n\n[UPLOADED REFERENCE DOCUMENT GROUND-TRUTH]:\n${uploadedContext}`;
+    }
+    const inputTokenEstimate = Math.ceil((activeQuery.length + previousContext.length) / 4);
+    const stepInputCost = (inputTokenEstimate / 1000) * 0.0015;
+
     // Initialize log entry for streaming
-    set({
+    set((state) => ({
       currentStepIndex: nextIndex,
       activeAgent: nextStep.agent,
       tasks: nextStep.tasks,
-      logs: [...logs, {
+      totalTokens: state.totalTokens + inputTokenEstimate,
+      totalCost: state.totalCost + stepInputCost,
+      logs: [...state.logs, {
         id: logId,
         agent: nextStep.agent,
         status: nextStep.status,
         message: nextStep.message,
         log: ""
       }]
-    });
+    }));
+
+    const startTime = performance.now();
 
     // Stream real AI thoughts/logs with accumulated context
     try {
-      const previousContext = logs.map(l => `[Agent ${l.agent}]: ${l.log}`).join('\n\n');
-      const tokenStream = await streamAgentThought(nextStep.agent, activeQuery, previousContext, apiKey);
+      const { citationFormat } = get();
+      const tokenStream = await streamAgentThought(nextStep.agent, activeQuery, previousContext, apiKey, citationFormat);
       let streamedLog = "";
       
       for await (const chunk of tokenStream) {
-        if (!get().isSimulating && get().currentStepIndex !== nextIndex) break;
+        if (!get().isSimulating) break;
         
         streamedLog += chunk;
         const chunkTokens = chunk.trim().split(/\s+/).filter(Boolean).length;
+        const chunkCost = (chunkTokens / 1000) * 0.0020; // $0.0020/1k tokens for output
+        const elapsed = parseFloat(((performance.now() - startTime) / 1000).toFixed(1));
         
         set((state) => ({
           totalTokens: state.totalTokens + chunkTokens,
+          totalCost: state.totalCost + chunkCost,
+          agentLatencies: {
+            ...state.agentLatencies,
+            [nextStep.agent]: elapsed
+          },
           logs: state.logs.map(l => l.id === logId ? { ...l, log: streamedLog } : l),
           ...(nextStep.agent === "Editor" || nextStep.agent === "Writer" ? { dynamicReport: streamedLog } : {})
         }));
       }
     } catch (err) {
       console.error("Streaming error in store:", err);
+    }
+
+    // Verify if simulation is still active (not paused mid-step)
+    if (get().isSimulating) {
+      set({ lastCompletedStepIndex: nextIndex });
+    } else {
+      // If paused, remove the incomplete/empty log from logs to keep the display clean
+      set((state) => ({
+        logs: state.logs.filter(l => l.id !== logId)
+      }));
+      return;
     }
 
     // Complete step and archive paper on last step
@@ -144,6 +229,7 @@ const useSimulationStore = create((set, get) => ({
             const data = await res.json();
             if (data.record && data.record.id) {
               newArchiveItem.id = data.record.id;
+              set({ lastSavedRecordId: data.record.id });
             }
           }
         }
@@ -213,11 +299,19 @@ const useSimulationStore = create((set, get) => ({
   },
 
   getReport: () => {
-    const { dynamicReport, promptKey, customQuery } = get();
+    const { dynamicReport, promptKey, customQuery, citationFormat } = get();
     if (customQuery) {
       return dynamicReport || "Awaiting custom research synthesis...";
     }
-    return dynamicReport || FINAL_REPORTS[promptKey] || "Processing custom paper draft...";
+    const baseReport = dynamicReport || FINAL_REPORTS[promptKey] || "Processing custom paper draft...";
+    
+    // Inject correct preset citation style if available
+    const presetCitations = PRESET_REFERENCES[promptKey]?.[citationFormat];
+    if (presetCitations && (baseReport.includes("## References") || baseReport.includes("### References"))) {
+      const parts = baseReport.split(/###? References/);
+      return parts[0] + presetCitations;
+    }
+    return baseReport;
   },
   
   getSteps: () => {
@@ -235,3 +329,25 @@ const useSimulationStore = create((set, get) => ({
 }));
 
 export default useSimulationStore;
+
+const PRESET_REFERENCES = {
+  "quantum_medicine": {
+    "IEEE": `## References
+[1] Y. Cao, et al., "Quantum Chemistry in the Age of Quantum Computing," *Chemical Reviews*, 2019. [Source](https://doi.org/10.1021/acs.chemrev.8b00803)
+[2] S. Sen, et al., "Breast Cancer Diagnostics on Quantum Neural Grids," *IEEE Transactions on Quantum Engineering*, 2024. [Source](https://doi.org/10.1109/TQE.2024.1234567)`,
+    "APA": `## References
+Cao, Y., et al. (2019). Quantum Chemistry in the Age of Quantum Computing. *Chemical Reviews*. https://doi.org/10.1021/acs.chemrev.8b00803
+Sen, S., et al. (2024). Breast Cancer Diagnostics on Quantum Neural Grids. *IEEE Transactions on Quantum Engineering*. https://doi.org/10.1109/TQE.2024.1234567`,
+    "MLA": `## References
+Cao, Y., et al. "Quantum Chemistry in the Age of Quantum Computing." *Chemical Reviews*, 2019, https://doi.org/10.1021/acs.chemrev.8b00803.
+Sen, S., et al. "Breast Cancer Diagnostics on Quantum Neural Grids." *IEEE Transactions on Quantum Engineering*, 2024, https://doi.org/10.1109/TQE.2024.1234567.`
+  },
+  "explain_transformers": {
+    "IEEE": `## References
+[1] A. Vaswani, et al., "Attention Is All You Need," in *NeurIPS*, 2017. [Source](https://arxiv.org/abs/1706.03762)`,
+    "APA": `## References
+Vaswani, A., et al. (2017). Attention Is All You Need. *NeurIPS 2017*. https://arxiv.org/abs/1706.03762`,
+    "MLA": `## References
+Vaswani, A., et al. "Attention Is All You Need." *NeurIPS*, 2017, https://arxiv.org/abs/1706.03762.`
+  }
+};

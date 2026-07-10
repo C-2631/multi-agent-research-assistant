@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Archive, X, Download, FileText, Search, Trash2 } from 'lucide-react';
+import { Archive, X, Download, FileText, Search, Trash2, Share2 } from 'lucide-react';
 import useSimulationStore from '../store/useSimulationStore';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -11,6 +11,7 @@ export default function ResearchArchiveModal({ isOpen, onClose }) {
   const { archive, deleteArchiveItem } = useSimulationStore();
   const [selectedPaper, setSelectedPaper] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sharingId, setSharingId] = useState(null);
 
   if (!isOpen) return null;
 
@@ -26,6 +27,53 @@ export default function ResearchArchiveModal({ isOpen, onClose }) {
     a.download = `${paper.title.replace(/\s+/g, '_')}.md`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleShareArchiveItem = async (paper) => {
+    const fallbackShare = () => {
+      try {
+        const base64Data = btoa(unescape(encodeURIComponent(paper.report)));
+        const url = `${window.location.origin}/paper/local?title=${encodeURIComponent(paper.title)}&data=${encodeURIComponent(base64Data)}`;
+        navigator.clipboard.writeText(url);
+        alert(`Offline public share URL generated and copied to clipboard!`);
+      } catch (e) {
+        console.error(e);
+        alert("Failed to compile local share link.");
+      }
+    };
+
+    if (paper.id > 1000000000000) {
+      fallbackShare();
+      return;
+    }
+
+    setSharingId(paper.id);
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        fallbackShare();
+        setSharingId(null);
+        return;
+      }
+      const res = await fetch(`http://localhost:5000/api/history/${paper.id}/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        navigator.clipboard.writeText(data.url);
+        alert(`Public share URL copied to clipboard: ${data.url}`);
+      } else {
+        fallbackShare();
+      }
+    } catch (e) {
+      console.error(e);
+      fallbackShare();
+    } finally {
+      setSharingId(null);
+    }
   };
 
   return (
@@ -70,7 +118,7 @@ export default function ResearchArchiveModal({ isOpen, onClose }) {
           </div>
 
           {/* Body Split View */}
-          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', flexGrow: 1, overflow: 'hidden' }}>
+          <div className="responsive-archive-grid">
             {/* Sidebar List */}
             <div style={{ borderRight: '1px solid var(--border-color)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-secondary)', overflowY: 'auto' }}>
               <div style={{ position: 'relative' }}>
@@ -161,9 +209,21 @@ export default function ResearchArchiveModal({ isOpen, onClose }) {
                       <h2 style={{ fontSize: '1.3rem', color: 'var(--color-accent)' }}>{selectedPaper.title}</h2>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Saved on {selectedPaper.date}</span>
                     </div>
-                    <button onClick={() => handleDownload(selectedPaper)} className="neo-button" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                      <Download size={14} /> Export MD
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        onClick={() => handleShareArchiveItem(selectedPaper)} 
+                        disabled={sharingId !== null}
+                        className="neo-button" 
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', gap: '0.3rem' }}
+                        title="Generate shareable URL and copy to clipboard"
+                      >
+                        <Share2 size={14} />
+                        {sharingId === selectedPaper.id ? "Sharing..." : "Share Link"}
+                      </button>
+                      <button onClick={() => handleDownload(selectedPaper)} className="neo-button" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                        <Download size={14} /> Export MD
+                      </button>
+                    </div>
                   </div>
 
                   <div className="markdown-body">

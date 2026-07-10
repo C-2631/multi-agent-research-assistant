@@ -1,27 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import useSimulationStore from '../store/useSimulationStore';
 import SimulationControls from './sandbox/SimulationControls';
 import AgentNetwork from './sandbox/AgentNetwork';
 import TaskChecklist from './sandbox/TaskChecklist';
 import LiveConsole from './sandbox/LiveConsole';
 import FinalOutput from './sandbox/FinalOutput';
+import WelcomeNoticeModal from './sandbox/WelcomeNoticeModal';
 
 export default function AgentSandbox() {
-  const { isSimulating, advanceStep } = useSimulationStore();
+  const [showNotice, setShowNotice] = useState(true);
 
-  useEffect(() => {
-    let timer;
-    if (isSimulating) {
-      const speed = useSimulationStore.getState().simSpeed;
-      timer = setTimeout(() => {
-        advanceStep();
-      }, speed);
-    }
-    return () => clearTimeout(timer);
-  }, [isSimulating, advanceStep, useSimulationStore.getState().currentStepIndex]);
+  const handleCloseNotice = () => {
+    setShowNotice(false);
+  };
 
   return (
     <div style={{ position: 'relative' }}>
+      <WelcomeNoticeModal isOpen={showNotice} onClose={handleCloseNotice} />
       <div className="bg-glow-spot" style={{ top: '-10%', left: '30%' }}></div>
 
       <div style={{ marginBottom: '2rem' }}>
@@ -35,12 +30,12 @@ export default function AgentSandbox() {
 
       <SimulationControls />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="responsive-sandbox-grid-top">
         <AgentNetwork />
         <TaskChecklist />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="responsive-sandbox-grid-bottom">
         <LiveConsole />
         <FinalOutput />
       </div>
