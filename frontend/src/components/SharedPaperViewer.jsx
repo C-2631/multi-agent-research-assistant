@@ -7,6 +7,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { useThemeStore } from '../store/themeStore';
+import { API_API_URL } from '../config';
 
 export default function SharedPaperViewer({ uuid }) {
   const { theme, setTheme, initTheme } = useThemeStore();
@@ -56,7 +57,7 @@ export default function SharedPaperViewer({ uuid }) {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/shared/${uuid}`);
+      const res = await fetch(`${API_API_URL}/shared/${uuid}`);
       if (res.ok) {
         const data = await res.json();
         setReportData(data.report);
@@ -75,7 +76,7 @@ export default function SharedPaperViewer({ uuid }) {
   const fetchComments = async () => {
     if (uuid === 'local') return;
     try {
-      const res = await fetch(`http://localhost:5000/api/shared/${uuid}/comments`);
+      const res = await fetch(`${API_API_URL}/shared/${uuid}/comments`);
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments || []);
@@ -88,7 +89,7 @@ export default function SharedPaperViewer({ uuid }) {
   const auditCitations = async (markdownText) => {
     setAuditing(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/verify-citations`, {
+      const res = await fetch(`${API_API_URL}/verify-citations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report: markdownText })
@@ -122,7 +123,7 @@ export default function SharedPaperViewer({ uuid }) {
 
     setSubmittingComment(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/shared/${uuid}/comments`, {
+      const res = await fetch(`${API_API_URL}/shared/${uuid}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

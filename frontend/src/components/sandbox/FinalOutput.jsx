@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Cpu, Copy, Download, Check, Share2 } from 'lucide-react';
 import useSimulationStore from '../../store/useSimulationStore';
+import { API_API_URL } from '../../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -350,7 +351,7 @@ export default function FinalOutput() {
         setSharedUrl(fallbackUrl);
         return fallbackUrl;
       }
-      const res = await fetch(`http://localhost:5000/api/history/${lastSavedRecordId}/share`, {
+      const res = await fetch(`${API_API_URL}/history/${lastSavedRecordId}/share`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Archive, X, Download, FileText, Search, Trash2, Share2 } from 'lucide-react';
 import useSimulationStore from '../store/useSimulationStore';
+import { API_API_URL } from '../config';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -55,7 +56,7 @@ export default function ResearchArchiveModal({ isOpen, onClose }) {
         setSharingId(null);
         return;
       }
-      const res = await fetch(`http://localhost:5000/api/history/${paper.id}/share`, {
+      const res = await fetch(`${API_API_URL}/history/${paper.id}/share`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

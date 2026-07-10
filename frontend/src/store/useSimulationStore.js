@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { MOCK_SIMULATION_STEPS, FINAL_REPORTS } from '../data/mockData';
 import { streamAgentThought } from '../services/aiService';
 import { useAuthStore } from './useAuthStore';
+import { API_API_URL } from '../config';
 
 const loadArchiveFromStorage = () => {
   try {
@@ -212,7 +213,7 @@ const useSimulationStore = create((set, get) => ({
       try {
         const token = localStorage.getItem('auth_token');
         if (token) {
-          const res = await fetch('http://localhost:5000/api/history', {
+          const res = await fetch(`${API_API_URL}/history`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

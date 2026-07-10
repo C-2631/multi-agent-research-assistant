@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { API_API_URL } from '../config';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = API_API_URL;
 
 const loadAuthFromStorage = () => {
   try {

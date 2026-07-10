@@ -4,6 +4,7 @@ import useSimulationStore from '../../store/useSimulationStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import ResearchArchiveModal from '../ResearchArchiveModal';
 import HitlReviewModal from './HitlReviewModal';
+import { API_API_URL } from '../../config';
 
 const DICTIONARY = [
   "Linear Regression",
@@ -98,7 +99,7 @@ export default function SimulationControls() {
     
     try {
       setUploadedDocument(file.name, "Extracting text...");
-      const response = await fetch('http://localhost:5000/api/upload', {
+      const response = await fetch(`${API_API_URL}/upload`, {
         method: 'POST',
         body: formData
       });

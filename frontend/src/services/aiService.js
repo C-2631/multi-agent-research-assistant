@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_API_URL } from '../config';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENHANCED AGENT SYSTEM PROMPTS — demand rich, referenced, real-world output
@@ -237,7 +238,7 @@ export async function streamAgentThought(agentName, promptKey, previousContext =
   // 1. Try calling the backend /api/stream-agent first
   try {
     console.log(`[aiService] Attempting to stream ${agentName} from backend...`);
-    const response = await fetch('http://localhost:5000/api/stream-agent', {
+    const response = await fetch(`${API_API_URL}/stream-agent`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
