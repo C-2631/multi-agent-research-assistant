@@ -374,6 +374,7 @@ async def stream_agent(req: AgentRequest, request: Request):
 # ---------------------------------------------------------------------------
 # Health Check (existing)
 # ---------------------------------------------------------------------------
+@app.get("/healthz")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "backend": "Python FastAPI", "version": "1.0.0"}
