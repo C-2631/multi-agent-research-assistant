@@ -2,8 +2,10 @@ import React from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 import useSimulationStore from '../../store/useSimulationStore';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 export default function TaskChecklist() {
+  const isMobile = useIsMobile();
   const { tasks } = useSimulationStore();
 
   return (
@@ -12,7 +14,7 @@ export default function TaskChecklist() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.2 }}
       className="glass-panel block-morphism" 
-      style={{ padding: '2rem' }}
+      style={{ padding: isMobile ? '1.25rem 0.75rem' : '2rem' }}
     >
       <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--color-text-main)' }}>
         <CheckCircle size={16} style={{ color: 'var(--color-accent)' }} /> Execution Tasks

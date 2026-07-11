@@ -110,14 +110,21 @@ export default function App() {
                   )}
                 </div>
 
-                <nav className="navbar-center">
-                  <ul className="nav-links" style={{ flexDirection: 'row', gap: '0.75rem' }}>
+                <nav className="navbar-center" style={isMobile ? { width: '100%', display: 'flex', justifyContent: 'center' } : {}}>
+                  <ul className="nav-links" style={{
+                    flexDirection: isMobile ? 'row' : 'row',
+                    display: isMobile ? 'grid' : 'flex',
+                    gridTemplateColumns: isMobile ? '1fr 1fr' : 'none',
+                    width: isMobile ? '100%' : 'auto',
+                    gap: isMobile ? '0.5rem' : '0.75rem'
+                  }}>
                     <li>
                       <div 
                         className={`nav-item ${activeTab === 'sandbox' ? 'active' : ''}`}
                         onClick={() => setActiveTab('sandbox')}
+                        style={isMobile ? { justifyContent: 'center', padding: '0.5rem 0.4rem', fontSize: '0.8rem', gap: '0.35rem', whiteSpace: 'nowrap' } : {}}
                       >
-                        <Terminal size={18} />
+                        <Terminal size={isMobile ? 16 : 18} style={{ flexShrink: 0 }} />
                         <span>Agent Sandbox</span>
                       </div>
                     </li>
@@ -125,15 +132,23 @@ export default function App() {
                       <div 
                         className={`nav-item ${activeTab === 'theory' ? 'active' : ''}`}
                         onClick={() => setActiveTab('theory')}
+                        style={isMobile ? { justifyContent: 'center', padding: '0.5rem 0.4rem', fontSize: '0.8rem', gap: '0.35rem', whiteSpace: 'nowrap' } : {}}
                       >
-                        <BookOpen size={18} />
+                        <BookOpen size={isMobile ? 16 : 18} style={{ flexShrink: 0 }} />
                         <span>Theory & Concepts</span>
                       </div>
                     </li>
                   </ul>
                 </nav>
 
-                <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="navbar-right" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? '0.5rem' : '1rem',
+                  flexWrap: isMobile ? 'wrap' : 'nowrap',
+                  justifyContent: isMobile ? 'center' : 'flex-end',
+                  width: isMobile ? '100%' : 'auto'
+                }}>
                   {/* Theme Switcher */}
                   <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-secondary)', padding: '0.3rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                     {[
@@ -165,12 +180,12 @@ export default function App() {
                   </div>
 
                   {/* User Info & Logout */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.4rem' : '0.75rem' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      padding: '0.35rem 0.75rem',
+                      padding: isMobile ? '0.35rem 0.5rem' : '0.35rem 0.75rem',
                       background: 'var(--bg-secondary)',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',

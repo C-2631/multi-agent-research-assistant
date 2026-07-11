@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal } from 'lucide-react';
 import useSimulationStore from '../../store/useSimulationStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const getAgentColor = (name) => {
   switch (name) {
@@ -14,6 +15,7 @@ const getAgentColor = (name) => {
 };
 
 export default function LiveConsole() {
+  const isMobile = useIsMobile();
   const { logs, isSimulating } = useSimulationStore();
   const consoleBodyRef = useRef(null);
   const isAtBottomRef = useRef(true);
@@ -36,7 +38,7 @@ export default function LiveConsole() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
       className="glass-panel block-morphism" 
-      style={{ padding: '2rem', display: 'flex', flexDirection: 'column', height: '450px' }}
+      style={{ padding: isMobile ? '1.25rem 0.75rem' : '2rem', display: 'flex', flexDirection: 'column', height: isMobile ? '380px' : '450px' }}
     >
       <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-main)' }}>
         <Terminal size={16} style={{ color: 'var(--color-accent)' }} /> Live Trace Log

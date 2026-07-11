@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ResearchArchiveModal from '../ResearchArchiveModal';
 import HitlReviewModal from './HitlReviewModal';
 import { API_API_URL } from '../../config';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const DICTIONARY = [
   "Linear Regression",
@@ -55,6 +56,7 @@ function getEditDistance(a, b) {
 }
 
 export default function SimulationControls() {
+  const isMobile = useIsMobile();
   const { promptKey, setPromptKey, customQuery, setCustomQuery, isSimulating, currentStepIndex, startSimulation, pauseSimulation, resetSimulation, apiKey, setApiKey, totalTokens, totalCost = 0.0, agentLatencies = {}, archive, isHitlActive, setHitlActive, uploadedFileName, setUploadedDocument } = useSimulationStore();
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
@@ -130,37 +132,59 @@ export default function SimulationControls() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel block-morphism" 
-        style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'visible' }}
+        style={{
+          padding: isMobile ? '0.75rem' : '1rem 1.25rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          alignItems: isMobile ? 'stretch' : 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+          overflow: 'visible'
+        }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexGrow: 1, maxWidth: '600px' }}>
-          <button
-            onClick={() => {
-              setUseCustomMode(!useCustomMode);
-              if (useCustomMode) {
-                setCustomQuery("");
-                setSuggestion(null);
-              }
-            }}
-            className={`neo-button ${useCustomMode ? 'active' : ''}`}
-            title={useCustomMode ? "Switch to Scenario Presets" : "Switch to Custom Research Topic"}
-            style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <Sparkles size={14} style={{ color: useCustomMode ? 'var(--color-accent)' : 'inherit' }} />
-            {useCustomMode ? "Custom Mode" : "Preset Mode"}
-          </button>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: '0.75rem',
+          flexGrow: 1,
+          width: isMobile ? '100%' : 'auto',
+          maxWidth: isMobile ? '100%' : '600px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', gap: '0.5rem', width: isMobile ? '100%' : 'auto' }}>
+            <button
+              onClick={() => {
+                setUseCustomMode(!useCustomMode);
+                if (useCustomMode) {
+                  setCustomQuery("");
+                  setSuggestion(null);
+                }
+              }}
+              className={`neo-button ${useCustomMode ? 'active' : ''}`}
+              title={useCustomMode ? "Switch to Scenario Presets" : "Switch to Custom Research Topic"}
+              style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem', flex: isMobile ? 1 : 'none', justifyContent: 'center' }}
+            >
+              <Sparkles size={14} style={{ color: useCustomMode ? 'var(--color-accent)' : 'inherit', flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap' }}>{useCustomMode ? "Custom Mode" : "Preset Mode"}</span>
+            </button>
 
-          <button
-            onClick={() => setHitlActive(!isHitlActive)}
-            disabled={isSimulating}
-            className={`neo-button ${isHitlActive ? 'active' : ''}`}
-            title={isHitlActive ? "Disable Human-in-the-Loop checkpoint review" : "Enable Human-in-the-Loop checkpoint review"}
-            style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <Sliders size={14} style={{ color: isHitlActive ? 'var(--color-accent)' : 'inherit' }} />
-            {isHitlActive ? "HITL Active" : "Enable HITL"}
-          </button>
+            <button
+              onClick={() => setHitlActive(!isHitlActive)}
+              disabled={isSimulating}
+              className={`neo-button ${isHitlActive ? 'active' : ''}`}
+              title={isHitlActive ? "Disable Human-in-the-Loop checkpoint review" : "Enable Human-in-the-Loop checkpoint review"}
+              style={{ padding: '0.5rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem', flex: isMobile ? 1 : 'none', justifyContent: 'center' }}
+            >
+              <Sliders size={14} style={{ color: isHitlActive ? 'var(--color-accent)' : 'inherit', flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap' }}>{isHitlActive ? "HITL Active" : "Enable HITL"}</span>
+            </button>
+          </div>
           {useCustomMode ? (
-            <div style={{ position: 'relative', flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flexGrow: 1, display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
               <input
                 type="text"
                 placeholder="Type any custom research topic (e.g. CRISPR Gene Therapy)..."
@@ -279,14 +303,21 @@ export default function SimulationControls() {
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexGrow: 1 }}>
-              <label style={{ fontWeight: 600, color: 'var(--color-text-main)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scenario:</label>
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              gap: '0.4rem',
+              flexGrow: 1,
+              width: isMobile ? '100%' : 'auto'
+            }}>
+              <label style={{ fontWeight: 600, color: 'var(--color-text-main)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scenario:</label>
               <select 
                 value={promptKey} 
                 onChange={(e) => setPromptKey(e.target.value)}
                 disabled={isSimulating}
                 className="neo-select"
-                style={{ flexGrow: 1 }}
+                style={{ width: '100%', flexGrow: 1, fontSize: isMobile ? '0.8rem' : '0.85rem' }}
               >
                 <option value="quantum_medicine">Quantum Computing in Medicine</option>
                 <option value="explain_transformers">Explain Transformers from Scratch</option>
@@ -296,10 +327,16 @@ export default function SimulationControls() {
         </div>
 
         {/* Action Controls & Metrics */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: '0.75rem',
+          width: isMobile ? '100%' : 'auto'
+        }}>
           {/* Live Token, Cost & Latency Metrics Badges */}
           {totalTokens > 0 && (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--color-text-main)' }} title="Cumulative Token Count">
                 <Cpu size={13} style={{ color: 'var(--color-accent)' }} />
                 <span>{totalTokens.toLocaleString()} Tokens</span>
@@ -319,48 +356,52 @@ export default function SimulationControls() {
             </div>
           )}
 
-          <button
-            onClick={() => setShowArchive(true)}
-            className="neo-button"
-            title="View Saved Research Papers Archive"
-            style={{ padding: '0.6rem', position: 'relative' }}
-          >
-            <Archive size={16} />
-            {archive.length > 0 && (
-              <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--color-accent)', color: '#000', borderRadius: '50%', width: '16px', height: '16px', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {archive.length}
-              </span>
-            )}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-end' }}>
+            <button
+              onClick={() => setShowArchive(true)}
+              className="neo-button"
+              title="View Saved Research Papers Archive"
+              style={{ padding: '0.6rem', position: 'relative' }}
+            >
+              <Archive size={16} />
+              {archive.length > 0 && (
+                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: 'var(--color-accent)', color: '#000', borderRadius: '50%', width: '16px', height: '16px', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {archive.length}
+                </span>
+              )}
+            </button>
 
-          <button
-            onClick={() => setShowKeyInput(!showKeyInput)}
-            className={`neo-button ${apiKey ? 'active' : ''}`}
-            title="Configure Gemini API Key"
-            style={{ padding: '0.6rem' }}
-          >
-            <Key size={16} style={{ color: apiKey ? 'var(--color-accent)' : 'inherit' }} />
-          </button>
+            <button
+              onClick={() => setShowKeyInput(!showKeyInput)}
+              className={`neo-button ${apiKey ? 'active' : ''}`}
+              title="Configure Gemini API Key"
+              style={{ padding: '0.6rem' }}
+            >
+              <Key size={16} style={{ color: apiKey ? 'var(--color-accent)' : 'inherit' }} />
+            </button>
 
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={isSimulating ? pauseSimulation : startSimulation}
-            className={`neo-button ${isSimulating ? 'active' : ''}`}
-          >
-            <Play size={16} fill={isSimulating ? "none" : "currentColor"} />
-            {isSimulating ? "Pause" : (currentStepIndex === -1 ? "Run Simulation" : "Resume")}
-          </motion.button>
-          
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={resetSimulation}
-            className="neo-button secondary"
-          >
-            <RotateCcw size={16} />
-            Reset
-          </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={isSimulating ? pauseSimulation : startSimulation}
+              className={`neo-button ${isSimulating ? 'active' : ''}`}
+              style={{ flex: isMobile ? '1 1 auto' : 'none', justifyContent: 'center' }}
+            >
+              <Play size={16} fill={isSimulating ? "none" : "currentColor"} style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap' }}>{isSimulating ? "Pause" : (currentStepIndex === -1 ? "Run Simulation" : "Resume")}</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={resetSimulation}
+              className="neo-button secondary"
+              style={{ flex: isMobile ? '1 1 auto' : 'none', justifyContent: 'center' }}
+            >
+              <RotateCcw size={16} style={{ flexShrink: 0 }} />
+              <span>Reset</span>
+            </motion.button>
+          </div>
         </div>
       </motion.div>
 

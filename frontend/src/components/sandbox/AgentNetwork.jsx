@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, HelpCircle } from 'lucide-react';
 import useSimulationStore from '../../store/useSimulationStore';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const getAgentColor = (name) => {
   switch (name) {
@@ -14,6 +15,7 @@ const getAgentColor = (name) => {
 };
 
 export default function AgentNetwork() {
+  const isMobile = useIsMobile();
   const { activeAgent, isSimulating, currentStepIndex, getSteps } = useSimulationStore();
   const steps = getSteps();
   const currentStep = currentStepIndex >= 0 ? steps[currentStepIndex] : null;
@@ -31,7 +33,7 @@ export default function AgentNetwork() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.1 }}
       className="glass-panel block-morphism" 
-      style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}
+      style={{ padding: isMobile ? '1.25rem 0.75rem' : '2rem', display: 'flex', flexDirection: 'column', gap: isMobile ? '1.25rem' : '2rem' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -39,19 +41,39 @@ export default function AgentNetwork() {
          </h3>
       </div>
 
-      <div style={{ position: 'relative', height: '200px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div style={{
+        position: 'relative',
+        height: isMobile ? 'auto' : '200px',
+        background: 'var(--bg-secondary)',
+        borderRadius: '12px',
+        border: '1px solid var(--border-color)',
+        overflow: isMobile ? 'visible' : 'hidden',
+        boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.1)',
+        padding: isMobile ? '1.5rem 0.5rem' : 0
+      }}>
         {/* SVG Connectors */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <line x1="12.5%" y1="50%" x2="37.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
-          <line x1="37.5%" y1="50%" x2="62.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
-          <line x1="62.5%" y1="50%" x2="87.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
+        {!isMobile && (
+          <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            <line x1="12.5%" y1="50%" x2="37.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
+            <line x1="37.5%" y1="50%" x2="62.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
+            <line x1="62.5%" y1="50%" x2="87.5%" y2="50%" stroke="var(--border-color)" strokeWidth="2" style={{ opacity: 0.3 }} />
 
-          {activeAgent === "Planner" && isSimulating && <line className="flow-line" x1="12.5%" y1="50%" x2="37.5%" y2="50%" stroke="#3b82f6" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />}
-          {activeAgent === "Researcher" && isSimulating && <line className="flow-line" x1="37.5%" y1="50%" x2="62.5%" y2="50%" stroke="#8b5cf6" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #8b5cf6)' }} />}
-          {activeAgent === "Writer" && isSimulating && <line className="flow-line" x1="62.5%" y1="50%" x2="87.5%" y2="50%" stroke="#10b981" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #10b981)' }} />}
-        </svg>
+            {activeAgent === "Planner" && isSimulating && <line className="flow-line" x1="12.5%" y1="50%" x2="37.5%" y2="50%" stroke="#3b82f6" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />}
+            {activeAgent === "Researcher" && isSimulating && <line className="flow-line" x1="37.5%" y1="50%" x2="62.5%" y2="50%" stroke="#8b5cf6" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #8b5cf6)' }} />}
+            {activeAgent === "Writer" && isSimulating && <line className="flow-line" x1="62.5%" y1="50%" x2="87.5%" y2="50%" stroke="#10b981" strokeWidth="3" style={{ filter: 'drop-shadow(0 0 6px #10b981)' }} />}
+          </svg>
+        )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '100%', padding: '0 1rem', perspective: '1000px' }}>
+        <div style={{
+          display: isMobile ? 'grid' : 'flex',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'none',
+          justifyContent: isMobile ? 'center' : 'space-around',
+          alignItems: 'center',
+          gap: isMobile ? '1.5rem 0.5rem' : 0,
+          height: isMobile ? 'auto' : '100%',
+          padding: isMobile ? '0.5rem' : '0 1rem',
+          perspective: '1000px'
+        }}>
           {agents.map((ag, i) => {
             const isActive = activeAgent === ag.name;
             const color = getAgentColor(ag.name);
