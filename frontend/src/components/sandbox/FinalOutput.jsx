@@ -8,6 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import remarkGfm from 'remark-gfm';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const LinkedinIcon = (props) => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" {...props}>
@@ -16,6 +17,7 @@ const LinkedinIcon = (props) => (
 );
 
 export default function FinalOutput() {
+  const isMobile = useIsMobile();
   const { currentStepIndex, getSteps, getReport, promptKey, citationFormat, setCitationFormat, lastSavedRecordId } = useSimulationStore();
   const [copied, setCopied] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -80,17 +82,25 @@ export default function FinalOutput() {
           margin-bottom: 6pt;
           border-bottom: 1px solid #000;
           padding-bottom: 2pt;
+          text-align: left;
         }
         h3 {
           font-size: 10pt;
           font-weight: bold;
           margin-top: 10pt;
           margin-bottom: 4pt;
+          text-align: left;
+        }
+        ul, ol, li {
+          text-align: left;
         }
         p {
           margin-top: 0;
           margin-bottom: 8pt;
           text-indent: 0.25in;
+        }
+        h1 + p, h2 + p, h3 + p, p:first-of-type {
+          text-indent: 0;
         }
         table {
           width: 100%;
@@ -448,13 +458,13 @@ export default function FinalOutput() {
       className="glass-panel block-morphism" 
       style={{ padding: '2rem', display: 'flex', flexDirection: 'column', height: '450px' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '0.75rem', marginBottom: '1rem' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-main)' }}>
           <FileText size={16} style={{ color: 'var(--color-accent)' }} /> Compiled Output
         </h3>
 
         {isComplete && (
-          <div style={{ display: 'flex', gap: '0.5rem', position: 'relative', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', position: 'relative', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
             <select
               value={citationFormat}
               onChange={(e) => setCitationFormat(e.target.value)}
@@ -677,9 +687,9 @@ function markdownToHtml(md) {
   html = html.replace(/\$\$([\s\S]*?)\$\$/g, '$$$$$1$$$$');
   
   // Replace headings (IEEE sizing)
-  html = html.replace(/^#\s+(.*)$/gm, '<h1>$1</h1>');
-  html = html.replace(/^##\s+(.*)$/gm, '<h2>$1</h2>');
   html = html.replace(/^###\s+(.*)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.*)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.*)$/gm, '<h1>$1</h1>');
   
   // Replace bold
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -691,15 +701,17 @@ function markdownToHtml(md) {
   html = html.replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>');
   html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>'); 
   
-  // Split paragraphs safely
-  html = html.split('\n').map(line => {
-    const trimmed = line.trim();
+  // Group consecutive text blocks safely into single paragraphs
+  html = html.split(/\n\s*\n/).map(block => {
+    const trimmed = block.trim();
     if (!trimmed) return "";
-    if (trimmed.startsWith('<') || trimmed.startsWith('$$') || trimmed.startsWith('\[') || trimmed.startsWith('\\(')) {
-      return line;
+    if (trimmed.startsWith('<') || trimmed.startsWith('$$') || trimmed.startsWith('\\[') || trimmed.startsWith('\\(') || trimmed.startsWith('|')) {
+      return trimmed;
     }
-    return `<p>${trimmed}</p>`;
-  }).join('\n');
+    // Merge consecutive lines inside the same paragraph
+    const mergedLines = trimmed.split('\n').map(l => l.trim()).join(' ');
+    return `<p>${mergedLines}</p>`;
+  }).join('\n\n');
   
   // Parse tables
   const lines = html.split('\n');

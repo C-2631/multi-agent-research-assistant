@@ -473,3 +473,36 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.95rem !important;
   }
 }
+
+/* Very Small Devices (Small Phones) */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 1rem 0.5rem !important;
+  }
+  .neo-button {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+  }
+  .neo-select {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+  .glass-panel {
+    border-radius: 8px !important;
+  }
+  h1 { font-size: 1.3rem !important; }
+  h2 { font-size: 1.1rem !important; }
+}
+
+/* Minimum Supported Width */
+@media (max-width: 360px) {
+  .main-content {
+    padding: 0.75rem 0.35rem !important;
+  }
+  .top-navbar {
+    padding: 0.5rem !important;
+  }
+  .sidebar-logo span {
+    font-size: 0.85rem !important;
+  }
+}

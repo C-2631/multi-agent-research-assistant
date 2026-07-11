@@ -7,10 +7,13 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import 'katex/dist/katex.min.css';
 import { useThemeStore } from '../store/themeStore';
+import { useIsMobile, useIsTablet } from '../hooks/useMediaQuery';
 import { API_API_URL } from '../config';
 
 export default function SharedPaperViewer({ uuid }) {
   const { theme, setTheme, initTheme } = useThemeStore();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -259,12 +262,12 @@ export default function SharedPaperViewer({ uuid }) {
       </header>
 
       {/* Main Split Layout */}
-      <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexGrow: 1, overflow: 'hidden' }}>
         {/* Manuscript Document Panel */}
         <div style={{
           flexGrow: 1,
           overflowY: 'auto',
-          padding: '3rem 4rem',
+          padding: isMobile ? '1.5rem 1rem' : (isTablet ? '2rem' : '3rem 4rem'),
           background: '#fff', // Enforce classic white academic page background
           color: '#000',
           display: 'flex',
@@ -285,16 +288,18 @@ export default function SharedPaperViewer({ uuid }) {
         <AnimatePresence>
           {showCommentsSidebar && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: '380px', opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
+              initial={isMobile ? { height: 0, opacity: 0 } : { width: 0, opacity: 0 }}
+              animate={isMobile ? { height: '380px', width: '100%', opacity: 1 } : { width: isTablet ? '280px' : '380px', opacity: 1 }}
+              exit={isMobile ? { height: 0, opacity: 0 } : { width: 0, opacity: 0 }}
               style={{
                 flexShrink: 0,
-                borderLeft: '1px solid var(--border-color)',
+                borderLeft: isMobile ? 'none' : '1px solid var(--border-color)',
+                borderTop: isMobile ? '1px solid var(--border-color)' : 'none',
                 background: 'var(--bg-card)',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                width: isMobile ? '100%' : (isTablet ? '280px' : '380px')
               }}
             >
               {/* Sidebar Header */}

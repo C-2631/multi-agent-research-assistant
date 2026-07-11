@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, Mail, Lock, User, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
@@ -6,8 +6,21 @@ import { useAuthStore } from '../store/useAuthStore';
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showColdStartNotice, setShowColdStartNotice] = useState(false);
   const [formData, setFormData] = useState({ email: '', username: '', password: '' });
   const { login, register, isLoading, error, clearError } = useAuthStore();
+
+  useEffect(() => {
+    let timer;
+    if (isLoading) {
+      timer = setTimeout(() => {
+        setShowColdStartNotice(true);
+      }, 4000);
+    } else {
+      setShowColdStartNotice(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -226,6 +239,36 @@ export default function AuthPage() {
               >
                 <AlertCircle size={16} />
                 {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Cold Start Notice */}
+          <AnimatePresence>
+            {showColdStartNotice && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  fontSize: '0.8rem',
+                  color: '#60a5fa',
+                  lineHeight: 1.4,
+                }}
+              >
+                <Layers size={18} style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>🚀 Live server waking up...</strong><br />
+                  Since the server sleeps after inactivity on free-tier, first login takes ~15-25 seconds. Hang tight!
+                </span>
               </motion.div>
             )}
           </AnimatePresence>

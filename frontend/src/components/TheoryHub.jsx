@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { ArrowRight, Layers, Cpu, Server, Workflow, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export default function TheoryHub() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("react");
   const [reactStep, setReactStep] = useState(0);
 
@@ -371,8 +373,8 @@ export default function TheoryHub() {
             <div className="glass-panel block-morphism" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--color-text-main)' }}>Supervisor Architecture</h3>
               
-              <div style={{ position: 'relative', height: '260px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem', marginTop: '1rem' }}>
+              <div style={{ position: 'relative', height: isMobile ? 'auto' : '260px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? '1.5rem' : '3rem', marginTop: '1rem' }}>
                   <motion.div 
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 3 }}
@@ -382,7 +384,7 @@ export default function TheoryHub() {
                   </motion.div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: isMobile ? 'center' : 'space-around', alignItems: 'center', gap: isMobile ? '1rem' : 0 }}>
                   {[
                     { name: "Researcher", color: "#8b5cf6" },
                     { name: "Code Writer", color: "#10b981" },
@@ -393,7 +395,7 @@ export default function TheoryHub() {
                       whileHover={{ scale: 1.1 }}
                       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                     >
-                      <div style={{ width: '2px', height: '30px', background: `linear-gradient(to bottom, var(--color-accent), ${wk.color}88)`, marginBottom: '0.5rem' }}></div>
+                      <div style={{ width: '2px', height: isMobile ? '20px' : '30px', background: `linear-gradient(to bottom, var(--color-accent), ${wk.color}88)`, marginBottom: '0.5rem' }}></div>
                       <div style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: `1px solid ${wk.color}55`, background: 'var(--bg-card)', fontSize: '0.8rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
                         {wk.name}
                       </div>
@@ -401,7 +403,7 @@ export default function TheoryHub() {
                   ))}
                 </div>
 
-                <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
+                <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: isMobile ? '1.5rem' : '3rem' }}>
                   Lines represent message buses and state dictionary synchronization.
                 </p>
               </div>

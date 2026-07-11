@@ -149,6 +149,8 @@ def save_audit_log(user_id: Optional[int], action: str, ip_address: Optional[str
 
 def create_user(email: str, username: str, password_hash: str, provider: str = "email") -> Optional[dict]:
     """Create a new user. Returns user record on success, or None on failure."""
+    email = email.strip().lower()
+    username = username.strip()
     with _get_connection() as conn:
         cursor = _get_cursor(conn)
         try:
@@ -175,9 +177,13 @@ def create_user(email: str, username: str, password_hash: str, provider: str = "
 
 def get_user_by_email(email: str) -> Optional[dict]:
     """Retrieve a user by email."""
+    email = email.strip().lower()
     with _get_connection() as conn:
         cursor = _get_cursor(conn)
-        _execute(cursor, "SELECT * FROM users WHERE email = ?", (email,))
+        if _is_postgres():
+            cursor.execute("SELECT * FROM users WHERE LOWER(email) = LOWER(%s)", (email,))
+        else:
+            cursor.execute("SELECT * FROM users WHERE LOWER(email) = LOWER(?)", (email,))
         return _row_to_dict(cursor.fetchone())
 
 

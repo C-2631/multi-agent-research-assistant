@@ -391,6 +391,9 @@ def register(body: RegisterRequest, request: Request):
         save_audit_log(None, "user_registration", ip_addr, "failed")
         raise HTTPException(status_code=400, detail="All fields are required")
 
+    email_clean = body.email.strip().lower()
+    username_clean = body.username.strip()
+
     if len(body.password) < 6:
         save_audit_log(None, "user_registration", ip_addr, "failed")
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
@@ -398,7 +401,7 @@ def register(body: RegisterRequest, request: Request):
     # Hash the password
     password_hash = bcrypt.hashpw(body.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-    user = create_user(body.email, body.username, password_hash)
+    user = create_user(email_clean, username_clean, password_hash)
     if user is None:
         save_audit_log(None, "user_registration", ip_addr, "failed")
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -425,14 +428,19 @@ def login(body: LoginRequest, request: Request):
         save_audit_log(None, "user_login", ip_addr, "failed")
         raise HTTPException(status_code=400, detail="Email and password are required")
 
-    user = get_user_by_email(body.email)
+    email_clean = body.email.strip().lower()
+    user = get_user_by_email(email_clean)
     if user is None:
         save_audit_log(None, "user_login", ip_addr, "failed")
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # Verify password
-    if not bcrypt.checkpw(body.password.encode("utf-8"), user["password_hash"].encode("utf-8")):
-        save_audit_log(user["id"], "user_login", ip_addr, "failed")
+    # Verify password safely
+    try:
+        if not bcrypt.checkpw(body.password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+            save_audit_log(user["id"], "user_login", ip_addr, "failed")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+    except Exception:
+        save_audit_log(user["id"] if user else None, "user_login", ip_addr, "failed")
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     save_audit_log(user["id"], "user_login", ip_addr, "success")

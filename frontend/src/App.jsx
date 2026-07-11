@@ -9,8 +9,10 @@ import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/useAuthStore';
 import useSimulationStore from './store/useSimulationStore';
 import SharedPaperViewer from './components/SharedPaperViewer';
+import { useIsMobile } from './hooks/useMediaQuery';
 
 export default function App() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("sandbox");
   const [isLoading, setIsLoading] = useState(true);
   const [sharedPaperUuid, setSharedPaperUuid] = useState(null);
@@ -80,30 +82,32 @@ export default function App() {
                     <Layers size={24} style={{ color: 'var(--color-accent)' }} />
                     <span>Agentic Lab</span>
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    background: 'rgba(34, 197, 94, 0.08)',
-                    border: '1px solid rgba(34, 197, 94, 0.25)',
-                    borderRadius: '20px',
-                    padding: '0.25rem 0.6rem',
-                    fontSize: '0.65rem',
-                    fontWeight: 600,
-                    letterSpacing: '0.04em',
-                    color: '#4ade80',
-                    fontFamily: 'var(--font-mono)'
-                  }}>
-                    <span className="pulse-active" style={{
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: '#22c55e',
-                      boxShadow: '0 0 6px #22c55e',
-                      display: 'inline-block'
-                    }}></span>
-                    SYS SEC: SOC-2 ENCLAVE ACTIVE
-                  </div>
+                  {!isMobile && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      background: 'rgba(34, 197, 94, 0.08)',
+                      border: '1px solid rgba(34, 197, 94, 0.25)',
+                      borderRadius: '20px',
+                      padding: '0.25rem 0.6rem',
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      color: '#4ade80',
+                      fontFamily: 'var(--font-mono)'
+                    }}>
+                      <span className="pulse-active" style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: '#22c55e',
+                        boxShadow: '0 0 6px #22c55e',
+                        display: 'inline-block'
+                      }}></span>
+                      SYS SEC: SOC-2 ENCLAVE ACTIVE
+                    </div>
+                  )}
                 </div>
 
                 <nav className="navbar-center">
@@ -174,9 +178,11 @@ export default function App() {
                       color: 'var(--color-text-muted)',
                     }}>
                       <User size={14} style={{ color: 'var(--color-accent)' }} />
-                      <span style={{ color: 'var(--color-text-main)', fontWeight: 500 }}>
-                        {user?.username || user?.email || 'User'}
-                      </span>
+                      {!isMobile && (
+                        <span style={{ color: 'var(--color-text-main)', fontWeight: 500 }}>
+                          {user?.username || user?.email || 'User'}
+                        </span>
+                      )}
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.05 }}

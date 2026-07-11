@@ -14,6 +14,22 @@ const loadAuthFromStorage = () => {
   return { token: null, user: null, isAuthenticated: false };
 };
 
+const fetchWithTimeout = async (url, options = {}, timeout = 35000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    if (err.name === 'AbortError') {
+      throw new Error('Server request timed out. If the live server was asleep, please try clicking Sign In again.');
+    }
+    throw err;
+  }
+};
+
 export const useAuthStore = create((set, get) => ({
   ...loadAuthFromStorage(),
   isLoading: false,
@@ -23,7 +39,7 @@ export const useAuthStore = create((set, get) => ({
   register: async (email, username, password) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_BASE}/register`, {
+      const res = await fetchWithTimeout(`${API_BASE}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, password })
@@ -45,7 +61,7 @@ export const useAuthStore = create((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await fetchWithTimeout(`${API_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -67,7 +83,7 @@ export const useAuthStore = create((set, get) => ({
   loginGoogle: async (id_token) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_BASE}/auth/google`, {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token })
