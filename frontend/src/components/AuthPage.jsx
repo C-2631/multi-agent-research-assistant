@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/useAuthStore';
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [showColdStartNotice, setShowColdStartNotice] = useState(false);
   const [formData, setFormData] = useState({ email: '', username: '', password: '' });
   const { login, register, isLoading, error, clearError } = useAuthStore();
@@ -26,10 +27,10 @@ export default function AuthPage() {
     e.preventDefault();
     clearError();
     if (isLogin) {
-      await login(formData.email, formData.password);
+      await login(formData.email, formData.password, rememberMe);
     } else {
       if (!formData.username.trim()) return;
-      await register(formData.email, formData.username, formData.password);
+      await register(formData.email, formData.username, formData.password, rememberMe);
     }
   };
 
@@ -390,6 +391,22 @@ export default function AuthPage() {
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '-0.2rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    style={{ accentColor: 'var(--color-accent)', cursor: 'pointer', width: '15px', height: '15px' }}
+                  />
+                  <span>Remember me on this device</span>
+                </label>
+                {!rememberMe && (
+                  <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontStyle: 'italic' }}>Clears on browser close</span>
+                )}
               </div>
 
               {/* Submit Button */}

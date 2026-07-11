@@ -5,8 +5,8 @@ const API_BASE = API_API_URL;
 
 const loadAuthFromStorage = () => {
   try {
-    const token = localStorage.getItem('auth_token');
-    const user = localStorage.getItem('auth_user');
+    const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+    const user = sessionStorage.getItem('auth_user') || localStorage.getItem('auth_user');
     if (token && user) {
       return { token, user: JSON.parse(user), isAuthenticated: true };
     }
@@ -35,8 +35,41 @@ export const useAuthStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
+  // ── Verify Server Session (checkAuth) ─────────────────────────────────
+  checkAuth: async () => {
+    const token = sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+    if (!token) {
+      get().logout();
+      return false;
+    }
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, 15000);
+      if (!res.ok) {
+        get().logout();
+        return false;
+      }
+      const data = await res.json();
+      if (data && data.user) {
+        if (localStorage.getItem('auth_token')) {
+          localStorage.setItem('auth_user', JSON.stringify(data.user));
+        } else {
+          sessionStorage.setItem('auth_user', JSON.stringify(data.user));
+        }
+        set({ user: data.user, isAuthenticated: true });
+        return true;
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('timed out')) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   // ── Register ──────────────────────────────────────────────────────────
-  register: async (email, username, password) => {
+  register: async (email, username, password, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
       const res = await fetchWithTimeout(`${API_BASE}/register`, {
@@ -47,8 +80,17 @@ export const useAuthStore = create((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Registration failed');
 
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      if (rememberMe) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_user');
+      } else {
+        sessionStorage.setItem('auth_token', data.token);
+        sessionStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+      }
       set({ token: data.token, user: data.user, isAuthenticated: true, isLoading: false });
       return true;
     } catch (err) {
@@ -58,7 +100,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // ── Login ─────────────────────────────────────────────────────────────
-  login: async (email, password) => {
+  login: async (email, password, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
       const res = await fetchWithTimeout(`${API_BASE}/login`, {
@@ -69,8 +111,17 @@ export const useAuthStore = create((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Login failed');
 
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      if (rememberMe) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_user');
+      } else {
+        sessionStorage.setItem('auth_token', data.token);
+        sessionStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+      }
       set({ token: data.token, user: data.user, isAuthenticated: true, isLoading: false });
       return true;
     } catch (err) {
@@ -80,7 +131,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // ── Google Login ──────────────────────────────────────────────────────
-  loginGoogle: async (id_token) => {
+  loginGoogle: async (id_token, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
       const res = await fetchWithTimeout(`${API_BASE}/auth/google`, {
@@ -91,8 +142,17 @@ export const useAuthStore = create((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Google Login failed');
 
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      if (rememberMe) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_user');
+      } else {
+        sessionStorage.setItem('auth_token', data.token);
+        sessionStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+      }
       set({ token: data.token, user: data.user, isAuthenticated: true, isLoading: false });
       return true;
     } catch (err) {
@@ -105,6 +165,8 @@ export const useAuthStore = create((set, get) => ({
   logout: () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
     set({ token: null, user: null, isAuthenticated: false, error: null });
   },
 

@@ -17,11 +17,12 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [sharedPaperUuid, setSharedPaperUuid] = useState(null);
   const { theme, setTheme, initTheme } = useThemeStore();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, checkAuth } = useAuthStore();
   const { syncHistory } = useSimulationStore();
 
   useEffect(() => {
     initTheme();
+    checkAuth();
     const checkRouting = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
@@ -37,7 +38,7 @@ export default function App() {
     checkRouting();
     window.addEventListener('hashchange', checkRouting);
     return () => window.removeEventListener('hashchange', checkRouting);
-  }, [initTheme]);
+  }, [initTheme, checkAuth]);
 
   useEffect(() => {
     if (isAuthenticated) {

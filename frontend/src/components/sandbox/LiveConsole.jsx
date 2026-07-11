@@ -16,7 +16,7 @@ const getAgentColor = (name) => {
 
 export default function LiveConsole() {
   const isMobile = useIsMobile();
-  const { logs, isSimulating } = useSimulationStore();
+  const { logs, isSimulating, activeAgent, currentStepIndex } = useSimulationStore();
   const consoleBodyRef = useRef(null);
   const isAtBottomRef = useRef(true);
 
@@ -40,9 +40,55 @@ export default function LiveConsole() {
       className="glass-panel block-morphism" 
       style={{ padding: isMobile ? '1.25rem 0.75rem' : '2rem', display: 'flex', flexDirection: 'column', height: isMobile ? '380px' : '450px' }}
     >
-      <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-main)' }}>
+      <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', color: 'var(--color-text-main)' }}>
         <Terminal size={16} style={{ color: 'var(--color-accent)' }} /> Live Trace Log
       </h3>
+
+      {/* Real-Time Phase Progress Estimator */}
+      {logs.length > 0 && (
+        <div style={{
+          marginBottom: '0.8rem',
+          padding: '0.65rem 0.9rem',
+          background: isSimulating ? 'rgba(59, 130, 246, 0.12)' : 'rgba(34, 197, 94, 0.12)',
+          border: `1px solid ${isSimulating ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)'}`,
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          fontSize: '0.8rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+            {isSimulating ? (
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: getAgentColor(activeAgent || 'Planner'), boxShadow: `0 0 8px ${getAgentColor(activeAgent || 'Planner')}` }} />
+            ) : (
+              <span style={{ color: '#4ade80' }}>✓</span>
+            )}
+            <span>
+              {isSimulating ? (
+                activeAgent === 'Planner' ? 'Phase 1 of 4: 📋 Planner Agent structuring research roadmap & methodology...' :
+                activeAgent === 'Researcher' ? 'Phase 2 of 4: 🔍 Researcher Agent querying arXiv, PubMed & grounding citations...' :
+                activeAgent === 'Writer' ? 'Phase 3 of 4: ✍️ Writer Agent drafting double-column IEEE academic sections...' :
+                activeAgent === 'Editor' ? 'Phase 4 of 4: 🛠️ Editor Agent finalizing peer-review metrics & formatting...' :
+                `Phase ${(currentStepIndex || 0) + 1} of 4: Collaborating...`
+              ) : (
+                'Simulation Complete: All 4 phases finished successfully!'
+              )}
+            </span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+            {isSimulating ? (
+              activeAgent === 'Planner' ? '~25s est. remaining' :
+              activeAgent === 'Researcher' ? '~18s est. remaining' :
+              activeAgent === 'Writer' ? '~10s est. remaining' :
+              '~4s est. remaining'
+            ) : (
+              '100% Ready'
+            )}
+          </div>
+        </div>
+      )}
       
       <div 
         ref={consoleBodyRef}

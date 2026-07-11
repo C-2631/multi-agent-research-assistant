@@ -10,16 +10,12 @@ import 'katex/dist/katex.min.css';
 import remarkGfm from 'remark-gfm';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 
-const LinkedinIcon = (props) => (
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" {...props}>
-    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-  </svg>
-);
 
 export default function FinalOutput() {
   const isMobile = useIsMobile();
   const { currentStepIndex, getSteps, getReport, promptKey, citationFormat, setCitationFormat, lastSavedRecordId } = useSimulationStore();
   const [copied, setCopied] = useState(false);
+  const [copiedBibtex, setCopiedBibtex] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [sharedUrl, setSharedUrl] = useState("");
@@ -31,6 +27,21 @@ export default function FinalOutput() {
     navigator.clipboard.writeText(report);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyBibtex = () => {
+    const title = (promptKey || "Autonomous Research").replace(/_/g, ' ');
+    const bibtex = `@article{agentic_lab_${new Date().getFullYear()}_${Date.now()},
+  title={${title}},
+  author={Agentic Lab Multi-Agent System (Planner, Researcher, Writer, Editor)},
+  journal={IEEE/ACM Transactions on Autonomous Research & Artificial Intelligence},
+  year={${new Date().getFullYear()}},
+  month={${new Date().toLocaleDateString('en-US', { month: 'short' }).toLowerCase()}},
+  url={https://multi-agent-research-assistant.vercel.app}
+}`;
+    navigator.clipboard.writeText(bibtex);
+    setCopiedBibtex(true);
+    setTimeout(() => setCopiedBibtex(false), 2000);
   };
 
   const generateStyledHtmlTemplate = (title, bodyHtml, format) => {
@@ -390,18 +401,6 @@ export default function FinalOutput() {
     }
   };
 
-  const handleLinkedInShare = async () => {
-    setSharing(true);
-    const link = await generateShareLinkSilently();
-    setSharing(false);
-    if (link) {
-      const text = encodeURIComponent(`Check out this publication-ready research paper compiled using the Multi-Agent Research Assistant: ${promptKey.replace(/_/g, ' ').toUpperCase()}`);
-      const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}&summary=${text}`;
-      window.open(shareUrl, '_blank', 'width=600,height=600');
-    } else {
-      alert("Failed to generate link for LinkedIn sharing.");
-    }
-  };
 
   const handleDownloadFormat = (ext) => {
     const mime = ext === 'md' ? 'text/markdown' : 'text/plain';
@@ -488,6 +487,16 @@ export default function FinalOutput() {
             </button>
 
             <button
+              onClick={handleCopyBibtex}
+              className="neo-button"
+              style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', gap: '0.3rem', borderColor: copiedBibtex ? '#4ade80' : 'var(--border-color)', color: copiedBibtex ? '#4ade80' : 'inherit' }}
+              title="Copy BibTeX Citation to Clipboard"
+            >
+              <span>📑</span>
+              {copiedBibtex ? "Copied BibTeX" : "BibTeX"}
+            </button>
+
+            <button
               onClick={handleShare}
               disabled={sharing}
               className="neo-button"
@@ -498,14 +507,6 @@ export default function FinalOutput() {
               {sharing ? "Sharing..." : sharedUrl ? "Shared" : "Share"}
             </button>
 
-            <button
-              onClick={handleLinkedInShare}
-              className="neo-button"
-              style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', gap: '0.3rem', color: '#60a5fa' }}
-              title="Share this report on LinkedIn"
-            >
-              <LinkedinIcon /> LinkedIn
-            </button>
 
             <button
               onClick={() => setShowExportDropdown(!showExportDropdown)}

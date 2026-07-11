@@ -184,75 +184,122 @@ export default function SimulationControls() {
             </button>
           </div>
           {useCustomMode ? (
-            <div style={{ position: 'relative', flexGrow: 1, display: 'flex', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
-              <input
-                type="text"
-                placeholder="Type any custom research topic (e.g. CRISPR Gene Therapy)..."
-                value={customQuery}
-                onChange={(e) => handleInputChange(e.target.value)}
-                disabled={isSimulating}
-                style={{
-                  width: '100%',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '6px',
-                  padding: '0.5rem 2.2rem 0.5rem 0.8rem',
-                  color: 'var(--color-text-main)',
-                  fontSize: '0.85rem',
-                  outline: 'none'
-                }}
-              />
-              <label 
-                style={{
-                  position: 'absolute',
-                  right: '0.6rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  cursor: isSimulating ? 'not-allowed' : 'pointer',
-                  color: uploadedFileName ? 'var(--color-accent)' : 'var(--color-text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.2rem'
-                }}
-                title={uploadedFileName ? `Attached: ${uploadedFileName}` : "Attach reference PDF/TXT document for in-memory RAG grounding"}
-              >
-                <Paperclip size={16} />
-                <input 
-                  type="file" 
-                  accept=".pdf,.txt" 
-                  onChange={handleFileUpload} 
-                  disabled={isSimulating} 
-                  style={{ display: 'none' }} 
+            <div style={{ position: 'relative', flexGrow: 1, display: 'flex', flexDirection: 'column', width: isMobile ? '100%' : 'auto' }}>
+              <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Type any custom research topic (Ctrl+Enter to run)..."
+                  value={customQuery}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      if (!isSimulating) startSimulation();
+                    }
+                  }}
+                  disabled={isSimulating}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    padding: '0.5rem 2.2rem 0.5rem 0.8rem',
+                    color: 'var(--color-text-main)',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
                 />
-              </label>
+                <label 
+                  style={{
+                    position: 'absolute',
+                    right: '0.6rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: isSimulating ? 'not-allowed' : 'pointer',
+                    color: uploadedFileName ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0.2rem'
+                  }}
+                  title={uploadedFileName ? `Attached: ${uploadedFileName}` : "Attach reference PDF/TXT document for in-memory RAG grounding"}
+                >
+                  <Paperclip size={16} />
+                  <input 
+                    type="file" 
+                    accept=".pdf,.txt" 
+                    onChange={handleFileUpload} 
+                    disabled={isSimulating} 
+                    style={{ display: 'none' }} 
+                  />
+                </label>
 
-              {uploadedFileName && (
-                <div style={{
-                  position: 'absolute',
-                  top: '110%',
-                  left: 0,
-                  background: 'rgba(59, 130, 246, 0.15)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  borderRadius: '4px',
-                  padding: '0.2rem 0.4rem',
-                  fontSize: '0.7rem',
-                  color: 'var(--color-accent)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                  zIndex: 40
-                }}>
-                  <span>📄 {uploadedFileName}</span>
-                  <button 
-                    onClick={() => setUploadedDocument("", "")}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', padding: 0, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}
-                    title="Remove attachment"
+                {uploadedFileName && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '110%',
+                    left: 0,
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    borderRadius: '4px',
+                    padding: '0.2rem 0.4rem',
+                    fontSize: '0.7rem',
+                    color: 'var(--color-accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    zIndex: 20
+                  }}>
+                    <span>📎 Grounded by: {uploadedFileName}</span>
+                    <button 
+                      onClick={() => setUploadedDocument("", "")}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontWeight: 'bold' }}
+                      title="Remove attachment"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Prompt Suggestion Chips */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem', width: '100%' }}>
+                {['⚡ CRISPR Gene Therapy', '⚡ Quantum Cryptography', '⚡ Solid-State EV Batteries', '⚡ Transformers from Scratch'].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    disabled={isSimulating}
+                    onClick={() => {
+                      const topic = chip.replace('⚡ ', '');
+                      setCustomQuery(topic);
+                      setPromptKey(topic);
+                    }}
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '12px',
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.72rem',
+                      color: 'var(--color-text-muted)',
+                      cursor: isSimulating ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.2rem'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--color-accent)';
+                      e.currentTarget.style.color = 'var(--color-text-main)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.color = 'var(--color-text-muted)';
+                    }}
                   >
-                    ×
+                    {chip}
                   </button>
-                </div>
-              )}
+                ))}
+              </div>
 
               {suggestion && !isSimulating && (
                 <motion.div
